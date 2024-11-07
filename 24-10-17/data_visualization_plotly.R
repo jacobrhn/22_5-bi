@@ -4,6 +4,7 @@ library(dplyr)
 library(stringr)
 library(plotly)
 library(reshape2)
+library(ggplot2)
 
 # Lade die Daten
 # 
@@ -150,5 +151,16 @@ fig
 
 #esquisse::esquisser()
 
-#ggplotly() Transformation ggplot zu plotly
+fig2 <- df %>%
+  filter(!(Country %in% "Germany")) %>%
+  ggplot() +
+  aes(x = Production_Costs, y = Sales_Revenue, colour = Country) +
+  geom_point(size = 1.4) +
+  scale_color_brewer(palette = "BrBG", direction = 1) +
+  labs(title = "Korrelation", subtitle = "neuer subtitlte") +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5), plot.subtitle = element_text(hjust = 0.5))
+fig2
+
+#ggplotly(fig2) Transformation ggplot zu plotly
 

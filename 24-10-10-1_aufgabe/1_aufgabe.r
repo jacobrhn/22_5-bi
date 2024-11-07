@@ -42,8 +42,13 @@ head(orders_by_customer)
 
 ### Wert pro Invoice
 ### spalte OrderValueSum (Gesamtwert aller Items mit selber InvoiceNo) in originale Tabelle einfügen
-value_per_invoice = online_retail_data %>% group_by(InvoiceNo) %>% summarise(OrderValueSum = sum(Quantity * UnitPrice))
+value_per_invoice = online_retail_data %>% 
+  group_by(InvoiceNo) %>% 
+  summarise(OrderValueSum = sum(Quantity * UnitPrice))
 online_retail_data = merge(online_retail_data, value_per_invoice, by = "InvoiceNo")
+
+### Wert pro OrderRow
+online_retail_data$RowValue = online_retail_data$Quantity * online_retail_data$UnitPrice
 
 ### Orders aus Deutschland mit OrderValueSum über 1000 Euro
 orders_germany_over_100 = online_retail_data %>% 
@@ -85,4 +90,8 @@ dbDisconnect(con)
 ### Definieren des Pfades zur CSV-Datei
 csv_file_path <- "online_retail_data.csv"
 ### Daten in eine CSV-Datei schreiben
+write.csv(online_retail_data, file = csv_file_path, row.names = FALSE)
+
+# Save Data for Assignement 2
+setwd("/Users/jacob/data/dhbw/22_5-bi/24-10-17-2_aufgabe")
 write.csv(online_retail_data, file = csv_file_path, row.names = FALSE)
