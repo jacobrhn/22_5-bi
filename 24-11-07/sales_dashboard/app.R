@@ -4,8 +4,10 @@
 
 #library(terra)
 #library(png)
-#library(leaflet)
+library(leaflet)
 #install.packages("terra")
+install.packages("leaflet")
+install.packages("png")
 #gdal
 
 
