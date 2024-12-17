@@ -5,7 +5,7 @@
 #' 
 #' Visualisierungen der OnlineRetail.csv-Datenquelle, anhand der in Aufgabe 1 aufgearbeiteten Daten
 
-setwd("/Users/jacob/data/dhbw/22_5-bi/24-10-17-2_aufgabe")
+setwd("/Users/jacob/data/dhbw/22_5-bi/98-assignments")
 #getwd()
 
 Sys.setlocale('LC_ALL','C')
@@ -31,7 +31,7 @@ A2_1_data = online_retail_data %>%
 
 #' Unterscheiden Sie zwischen den Ländern, die mehr als 100 Artikel verkauft haben, und den anderen.
 A2_1_fig = plot_ly(
-  data = data_A2_1,
+  data = A2_1_data,
   x = ~reorder(Country, TotalQuantity, decreasing = TRUE),
   y = ~TotalQuantity,
   type = "bar",
@@ -59,7 +59,7 @@ A2_2_data = online_retail_data %>%
   arrange(desc(TotalQuantity))
 
 A2_2_fig = plot_ly(
-  data = data_A2_2,
+  data = A2_2_data,
   x = ~reorder(Description, TotalQuantity, decreasing = TRUE),
   y = ~TotalQuantity,
   type = "scatter",
@@ -85,7 +85,7 @@ A2_3_data = online_retail_data %>%
   arrange(desc(TotalUnitPrice))
 
 A2_3_fig = plot_ly(
-  data = data_A2_3,
+  data = A2_3_data,
   x = ~reorder(Description, TotalUnitPrice, decreasing = TRUE),
   y = ~TotalUnitPrice,
   type = "scatter",
@@ -110,7 +110,7 @@ A2_4_data = online_retail_data %>%
   arrange(desc(TotalQuantity))
 
 A2_4_fig = plot_ly(
-  data = data_A2_4,
+  data = A2_4_data,
   x = ~InvoiceDate,
   y = ~TotalQuantity,
   type = "scatter",
@@ -137,7 +137,7 @@ A2_5_data = online_retail_data %>%
   arrange(desc(TotalQuantity))
 
 A2_5_fig = plot_ly(
-  data = data_A2_5,
+  data = A2_5_data,
   x = ~TotalUnitPrice,
   y = ~TotalQuantity,
   type = "scatter",
