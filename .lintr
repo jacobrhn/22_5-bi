@@ -1,1 +1,5 @@
-linters: with_defaults(line_length_linter=line_length_linter(100))
+
+linters: linters_with_defaults(
+  line_length_linter=line_length_linter(200),
+  indentation_linter = NULL
+)

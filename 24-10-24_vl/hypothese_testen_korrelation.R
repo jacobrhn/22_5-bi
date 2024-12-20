@@ -1,4 +1,4 @@
-setwd("/Users/jacob/data/dhbw/22_5-bi/24-10-24")
+setwd("/Users/jacob/data/dhbw/22_5-bi/24-10-24_vl")
 #getwd()
 # Lade notwendige Pakete
 library(dplyr)

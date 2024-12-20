@@ -1,4 +1,15 @@
-setwd("/Users/jacob/data/dhbw/22_5-bi/24-10-10-1_aufgabe")
+#' 
+#'                         AUFGABE 1
+#' 
+#'              Business Intelligence (AM413.1)
+#'                Prof. Dr. Aikatarini Nakou
+#'                   WWI22 - DHBW Lörrach
+#' 
+#'            Bearbeitet von Jacob Ruhnau (2441453)
+#' 
+
+
+setwd("/Users/jacob/data/dhbw/22_5-bi/98-assignments")
 
 library(Hmisc)
 library(lubridate)
@@ -17,38 +28,46 @@ head(online_retail_data)
 
 ## Bereinigen
 ## Wandle InvoiceDate von chr to DateTime (POSIXlt)
-online_retail_data$InvoiceDate = dmy_hm(online_retail_data$InvoiceDate)
+online_retail_data$InvoiceDate <- dmy_hm(online_retail_data$InvoiceDate)
 str(online_retail_data$InvoiceDate)
 
 ### na-Werte filtern
 colSums(is.na(online_retail_data)) 
 
 #### Nur CustomerID hat na-Werte (Anzahl: 135080 = 24,93%), diese werden mit Konstante belegt (impute)
-online_retail_data$CustomerID=impute(online_retail_data$CustomerID, "None")
+online_retail_data$CustomerID <- impute(online_retail_data$CustomerID, "None")
 summary(online_retail_data$CustomerID)
 
-### Negative Werte in Quantiy und UnitPrice mit Median belegen
+### Negative Werte in Quantity und UnitPrice mit Median belegen
 colSums(online_retail_data < 0)
-online_retail_data$Quantity[online_retail_data$Quantity < 0] = median(online_retail_data$Quantity[online_retail_data$Quantity > 0])
-online_retail_data$UnitPrice[online_retail_data$UnitPrice < 0] = median(online_retail_data$UnitPrice[online_retail_data$UnitPrice > 0])
+
+online_retail_data$Quantity[online_retail_data$Quantity < 0] <- median(
+  online_retail_data$Quantity[online_retail_data$Quantity > 0]
+)
+
+online_retail_data$UnitPrice[online_retail_data$UnitPrice < 0] <- median(
+  online_retail_data$UnitPrice[online_retail_data$UnitPrice > 0]
+)
 
 
 ## Kennzahlen berechnen 
 ### Bestellungen pro Customer und sortieren
-orders_by_customer = online_retail_data %>% group_by(CustomerID) %>% summarise(Anzahl_Bestellungen = n())
-orders_by_customer = orders_by_customer[order(orders_by_customer$Anzahl_Bestellungen, decreasing = TRUE),]
+orders_by_customer <- online_retail_data %>% 
+  group_by(CustomerID) %>% 
+  summarise(Anzahl_Bestellungen = n())
+orders_by_customer <- orders_by_customer[order(orders_by_customer$Anzahl_Bestellungen, decreasing = TRUE),]
 summary(orders_by_customer)
 head(orders_by_customer)
 
 ### Wert pro Invoice
-### spalte OrderValueSum (Gesamtwert aller Items mit selber InvoiceNo) in originale Tabelle einfügen
-value_per_invoice = online_retail_data %>% 
+### Spalte OrderValueSum (Gesamtwert aller Items mit selber InvoiceNo) in originale Tabelle einfügen
+value_per_invoice <- online_retail_data %>% 
   group_by(InvoiceNo) %>% 
   summarise(OrderValueSum = sum(Quantity * UnitPrice))
-online_retail_data = merge(online_retail_data, value_per_invoice, by = "InvoiceNo")
+online_retail_data <- merge(online_retail_data, value_per_invoice, by = "InvoiceNo")
 
 ### Wert pro OrderRow
-online_retail_data$RowValue = online_retail_data$Quantity * online_retail_data$UnitPrice
+online_retail_data$RowValue <- online_retail_data$Quantity * online_retail_data$UnitPrice
 
 ### Orders aus Deutschland mit OrderValueSum über 1000 Euro
 orders_germany_over_100 = online_retail_data %>% 
@@ -76,7 +95,7 @@ summary(order(orders_per_stock_item$SumOrders, decreasing = TRUE))
 
 ## Ergebnisse in einer SQLite-Datenbank speichern  
 ### Verbindung zur SQLite-Datenbank erstellen
-output <- "1_aufgabe_output.sqlite"
+output <- "aufgabe_1_output.sqlite"
 con <- dbConnect(SQLite(), dbname = output)
 ### Daten in die Datenbank schreiben
 dbWriteTable(con, "online_retail_data", online_retail_data, overwrite = TRUE, )
@@ -90,8 +109,4 @@ dbDisconnect(con)
 ### Definieren des Pfades zur CSV-Datei
 csv_file_path <- "online_retail_data.csv"
 ### Daten in eine CSV-Datei schreiben
-write.csv(online_retail_data, file = csv_file_path, row.names = FALSE)
-
-# Save Data for Assignement 2
-setwd("/Users/jacob/data/dhbw/22_5-bi/24-10-17-2_aufgabe")
 write.csv(online_retail_data, file = csv_file_path, row.names = FALSE)

@@ -1,11 +1,15 @@
 #' 
-#'                         AUFGABE 2
+#'                       Assignement: 
+#' 
+#'           Intelligent Data Analysis Dashboard
 #' 
 #'              Business Intelligence (AM413.1)
 #'                Prof. Dr. Aikatarini Nakou
 #'                   WWI22 - DHBW Lörrach
 #' 
-#'            Bearbeitet von Jacob Ruhnau (2441453)
+#'                      Bearbeitet von 
+#'                    Anna-Lehna Grittke
+#'                       Jacob Ruhnau
 
 setwd("/Users/jacob/data/dhbw/22_5-bi/99-portfolio")
 
