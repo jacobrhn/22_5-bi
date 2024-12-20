@@ -1,3 +1,12 @@
+#' 
+#'                         AUFGABE 2
+#' 
+#'              Business Intelligence (AM413.1)
+#'                Prof. Dr. Aikatarini Nakou
+#'                   WWI22 - DHBW Lörrach
+#' 
+#'            Bearbeitet von Jacob Ruhnau (2441453)
+
 setwd("/Users/jacob/data/dhbw/22_5-bi/99-portfolio")
 
 library(shiny)

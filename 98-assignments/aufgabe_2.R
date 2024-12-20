@@ -1,9 +1,13 @@
-#' AUFGABE 2
 #' 
-#' Business Intelligence (AM413.1) - WWI22
-#' Eingereicht von Jacob Ruhnau (ruhnauja@dhbw-loerrach.de)
+#'                         AUFGABE 2
 #' 
-#' Visualisierungen der OnlineRetail.csv-Datenquelle, anhand der in Aufgabe 1 aufgearbeiteten Daten
+#'              Business Intelligence (AM413.1)
+#'                Prof. Dr. Aikatarini Nakou
+#'                   WWI22 - DHBW Lörrach
+#' 
+#'            Bearbeitet von Jacob Ruhnau (2441453)
+#' 
+
 
 setwd("/Users/jacob/data/dhbw/22_5-bi/98-assignments")
 #getwd()
