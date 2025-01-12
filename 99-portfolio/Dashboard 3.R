@@ -14,6 +14,7 @@ library(lubridate)
 library(plotly)
 library(choroplethrMaps)
 library(maps)
+library(DT)
 
 retail_data <- read.csv("cleaned_data.csv", stringsAsFactors = FALSE, fileEncoding = "UTF-8")
 
@@ -32,8 +33,9 @@ ui <- dashboardPage(
   
   dashboardSidebar(
     sidebarMenu(
-      menuItem("Dashboard", tabName = "dashboard", icon = icon("dashboard")),
-      
+
+      menuItem("Filter", tabName = "filter", icon = icon("filter")),
+    
       pickerInput("country_filter", "Land(er):", 
                   choices = unique(retail_data$Country), 
                   selected = unique(retail_data$Country),
@@ -55,52 +57,112 @@ ui <- dashboardPage(
                     selectedTextFormat = "count > 3"
                   ), 
                   multiple = TRUE
-      )
+      ),
+
+      sliderInput("price_filter", "UnitPrice (EUR):", 
+                  min = min(retail_data$UnitPrice, na.rm = TRUE),
+                  max = max(retail_data$UnitPrice, na.rm = TRUE),
+                  value = c(min(retail_data$UnitPrice, na.rm = TRUE), max(retail_data$UnitPrice, na.rm = TRUE)),
+                  step = 1
+      ),
+
+      tags$hr(),
+      
+      menuItem("Dashboard", tabName = "dashboard", icon = icon("dashboard")),
+      menuItem("Preis und Verkaufszahlen", tabName = "price_quantity", icon = icon("chart-line")),
+      menuItem("Preisverteilung", tabName = "price_distribution", icon = icon("chart-bar")),
+      menuItem("Top-Produkte", tabName = "top_products", icon = icon("star")),
+      menuItem("Top-Länder", tabName = "top_countries", icon = icon("globe")),
+      menuItem("Data Browser", tabName = "data_browser", icon = icon("table"))
     )
   ),
   
   dashboardBody(
-    fluidRow(
-      # Vier Boxen für KPIs
-      valueBoxOutput("total_sales"),
-      valueBoxOutput("total_quantity"),
-      valueBoxOutput("total_customers"),
-      valueBoxOutput("total_products")
-    ),
-    
-    fluidRow(
-      # Vier Boxen für Grafiken
-      box(
-        title = "Zusammenhang zwischen Preis und Verkaufszahlen", width = 6, status = "primary", solidHeader = TRUE,
-        plotlyOutput("price_quantity_scatter")
+    tabItems(
+      tabItem(tabName = "dashboard",
+        fluidRow(
+          # Vier Boxen für KPIs
+          valueBoxOutput("total_sales"),
+          valueBoxOutput("total_quantity"),
+          valueBoxOutput("total_customers"),
+          valueBoxOutput("total_products")
+        ),
+        
+        fluidRow(
+          # Vier Boxen für Grafiken
+          box(
+            title = "Zusammenhang zwischen Preis und Verkaufszahlen", width = 6, status = "primary", solidHeader = TRUE,
+            plotlyOutput("price_quantity_scatter")
+          ),
+          box(
+            title = "Preisverteilung", width = 6, status = "primary", solidHeader = TRUE,
+            plotlyOutput("price_distribution_plot")
+          )
+        ),
+        
+        fluidRow(
+          box(
+            title = "Top-Produkte", width = 6, status = "primary", solidHeader = TRUE,
+            plotlyOutput("top_products_plot")
+          ),
+          box(
+            title = "Top-Länder", width = 6, status = "primary", solidHeader = TRUE,
+            plotlyOutput("top_countries_plot")
+          )
+        )
       ),
-      box(
-        title = "Preisverteilung", width = 6, status = "primary", solidHeader = TRUE,
-        plotlyOutput("price_distribution_plot")
-      )
-    ),
-    
-    fluidRow(
-      box(
-        title = "Top-Produkte", width = 6, status = "primary", solidHeader = TRUE,
-        plotlyOutput("top_products_plot")
+      
+      tabItem(tabName = "price_quantity",
+        fluidRow(
+          box(
+            title = "Zusammenhang zwischen Preis und Verkaufszahlen", width = 12, status = "primary", solidHeader = TRUE,
+            plotlyOutput("price_quantity_scatter_full")
+          )
+        )
       ),
-      box(
-        title = "Top-Länder", width = 6, status = "primary", solidHeader = TRUE,
-        plotlyOutput("top_countries_plot")
+      
+      tabItem(tabName = "price_distribution",
+        fluidRow(
+          box(
+            title = "Preisverteilung", width = 12, status = "primary", solidHeader = TRUE,
+            plotlyOutput("price_distribution_plot_full")
+          )
+        )
+      ),
+      
+      tabItem(tabName = "top_products",
+        fluidRow(
+          box(
+            title = "Top-Produkte", width = 12, status = "primary", solidHeader = TRUE,
+            plotlyOutput("top_products_plot_full")
+          )
+        )
+      ),
+      
+      tabItem(tabName = "top_countries",
+        fluidRow(
+          box(
+            title = "Top-Länder", width = 12, status = "primary", solidHeader = TRUE,
+            plotlyOutput("top_countries_plot_full")
+          )
+        )
+      ),
+
+      tabItem(tabName = "data_browser",
+        DT::dataTableOutput("data_table")
       )
     )
   )
 )
 
 # Server
-server <- function(input, output) {
+server <- function(input, output, session) {
   
   # Filtere die Daten nach den ausgewählten Ländern und Jahren
   filtered_data <- reactive({
-    req(input$country_filter, input$year_filter)
+    req(input$country_filter, input$year_filter, input$price_filter)
     retail_data %>%
-      filter(Country %in% input$country_filter, Year %in% input$year_filter)
+      filter(Country %in% input$country_filter, Year %in% input$year_filter, UnitPrice >= input$price_filter[1], UnitPrice <= input$price_filter[2])
   })
   
   # Total Sales (Gesamtumsatz)
@@ -147,8 +209,8 @@ server <- function(input, output) {
     )
   })
   
-# Zusammenhang zwischen Preis und Verkaufszahlen (Streudiagramm mit Regressionslinie)
-output$price_quantity_scatter <- renderPlotly({
+  # Zusammenhang zwischen Preis und Verkaufszahlen (Streudiagramm mit Regressionslinie)
+  output$price_quantity_scatter <- renderPlotly({
     data <- filtered_data()
     
     # Streudiagramm
@@ -164,10 +226,46 @@ output$price_quantity_scatter <- renderPlotly({
       add_lines(x = ~UnitPrice, y = fitted(model), line = list(color = 'red'), name = 'Regressionslinie')
     
     scatter_plot
-})
+  })
+  
+  output$price_quantity_scatter_full <- renderPlotly({
+    data <- filtered_data()
+    
+    # Streudiagramm
+    scatter_plot <- plot_ly(data, x = ~UnitPrice, y = ~Quantity, type = 'scatter', mode = 'markers', 
+                            marker = list(size = 5, color = 'blue', opacity = 0.5)) %>%
+      layout(title = "Zusammenhang Preis und Verkaufszahlen",
+             xaxis = list(title = "Preis"),
+             yaxis = list(title = "Verkäufte Menge"))
+    
+    # Regressionslinie hinzufügen
+    model <- lm(Quantity ~ UnitPrice, data = data)
+    scatter_plot <- scatter_plot %>%
+      add_lines(x = ~UnitPrice, y = fitted(model), line = list(color = 'red'), name = 'Regressionslinie')
+    
+    scatter_plot
+  })
   
   # Preisverteilung als Histogramm und Boxplot
   output$price_distribution_plot <- renderPlotly({
+    data <- filtered_data()
+    price_histogram <- plot_ly(data, x = ~UnitPrice, type = 'histogram', nbinsx = 50, 
+                               marker = list(color = 'rgba(255, 165, 0, 0.6)', line = list(color = 'orange'))) %>%
+      layout(title = "Preisverteilung der Produkte",
+             xaxis = list(title = "Preis"),
+             yaxis = list(title = "Häufigkeit"))
+    
+    price_boxplot <- plot_ly(data, y = ~UnitPrice, type = 'box', 
+                             boxmean = TRUE, 
+                             marker = list(color = 'orange')) %>%
+      layout(title = "Preisverteilung (Boxplot)",
+             yaxis = list(title = "Preis (UnitPrice)"))
+    
+    subplot(price_histogram, price_boxplot, nrows = 1, shareX = TRUE) %>%
+      layout(title = "Verteilung der Verkaufspreise")
+  })
+  
+  output$price_distribution_plot_full <- renderPlotly({
     data <- filtered_data()
     price_histogram <- plot_ly(data, x = ~UnitPrice, type = 'histogram', nbinsx = 50, 
                                marker = list(color = 'rgba(255, 165, 0, 0.6)', line = list(color = 'orange'))) %>%
@@ -201,18 +299,24 @@ output$price_quantity_scatter <- renderPlotly({
              yaxis = list(title = "Umsatz"))
   })
   
+  output$top_products_plot_full <- renderPlotly({
+    data <- filtered_data()
+    top_products <- data %>%
+      group_by(Description) %>%
+      summarise(TotalRevenue = sum(TotalRevenue, na.rm = TRUE)) %>%
+      arrange(desc(TotalRevenue)) %>%
+      head(10)
+    
+    plot_ly(top_products, x = ~Description, y = ~TotalRevenue, type = 'scatter', mode = 'markers', 
+            marker = list(size = 15, color = 'lightgreen', symbol = 'circle')) %>%
+      layout(title = "Top-Produkte nach Umsatz",
+             xaxis = list(title = "Produkt"),
+             yaxis = list(title = "Umsatz"))
+  })
+  
   # Top-Länder
   output$top_countries_plot <- renderPlotly({
-    
-    # Filtere die Daten nach den ausgewählten Ländern und Jahren
-    filtered_data <- reactive({
-      req(input$country_filter, input$year_filter)
-      retail_data %>%
-        filter(Country %in% input$country_filter, Year %in% input$year_filter)
-    })
-    
     data <- filtered_data()
-    data <- retail_data
     top_countries <- data %>%
       group_by(Country) %>%
       summarise(TotalRevenue = sum(TotalRevenue, na.rm = TRUE)) %>%
@@ -220,17 +324,16 @@ output$price_quantity_scatter <- renderPlotly({
     
     # Liste aller Länder der Welt
     all_countries <- data.frame(
-      region = unique(map_data("world")$region),
-      value = 0
+      Country = unique(map_data("world")$region)
     )
     
     # Zusammenführen der Daten
-    cartogram_data <- merge(all_countries, top_countries, by.x = "region", by.y = "Country", all.x = TRUE)
+    cartogram_data <- merge(all_countries, top_countries, by = "Country", all.x = TRUE)
     cartogram_data$TotalRevenue[is.na(cartogram_data$TotalRevenue)] <- 0
     
     plot_ly(
       type = 'choropleth',
-      locations = cartogram_data$region,
+      locations = cartogram_data$Country,
       locationmode = 'country names',
       z = cartogram_data$TotalRevenue,
       colorscale = 'YlOrRd_r',
@@ -245,6 +348,62 @@ output$price_quantity_scatter <- renderPlotly({
           projection = list(type = 'equirectangular')
         )
       )
+  })
+  
+  output$top_countries_plot_full <- renderPlotly({
+    data <- filtered_data()
+    top_countries <- data %>%
+      group_by(Country) %>%
+      summarise(TotalRevenue = sum(TotalRevenue, na.rm = TRUE)) %>%
+      arrange(desc(TotalRevenue))
+    
+    # Liste aller Länder der Welt
+    all_countries <- data.frame(
+      Country = unique(map_data("world")$region)
+    )
+    
+    # Zusammenführen der Daten
+    cartogram_data <- merge(all_countries, top_countries, by = "Country", all.x = TRUE)
+    cartogram_data$TotalRevenue[is.na(cartogram_data$TotalRevenue)] <- 0
+    
+    plot_ly(
+      type = 'choropleth',
+      locations = cartogram_data$Country,
+      locationmode = 'country names',
+      z = cartogram_data$TotalRevenue,
+      colorscale = 'YlOrRd_r',
+      colorbar = list(title = 'Umsatz')
+    ) %>%
+      layout(
+        title = "Top-Länder nach Umsatz",
+        geo = list(
+          showframe = FALSE,
+          showcoastlines = TRUE,
+          coastlinecolor = 'rgb(255, 255, 255)',
+          projection = list(type = 'equirectangular')
+        )
+      )
+  })
+
+  output$data_table <- DT::renderDataTable({
+    data <- filtered_data()
+    DT::datatable(data, options = list(pageLength = 25))
+  })
+  
+  observeEvent(event_data("plotly_click", source = "price_quantity_scatter"), {
+    updateTabItems(session, "tabs", "price_quantity")
+  })
+  
+  observeEvent(event_data("plotly_click", source = "price_distribution_plot"), {
+    updateTabItems(session, "tabs", "price_distribution")
+  })
+  
+  observeEvent(event_data("plotly_click", source = "top_products_plot"), {
+    updateTabItems(session, "tabs", "top_products")
+  })
+  
+  observeEvent(event_data("plotly_click", source = "top_countries_plot"), {
+    updateTabItems(session, "tabs", "top_countries")
   })
 }
 
